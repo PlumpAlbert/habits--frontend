@@ -4,6 +4,8 @@ import { DifficultyValues, EDifficulty, TaskSchema } from './types';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 
 const FormSchema = TaskSchema.omit({ id: true });
 
@@ -15,12 +17,25 @@ export const TaskCreatePage: FC = () => {
       difficulty: EDifficulty.Medium,
     },
   });
+  const client = useQueryClient();
+
+  const createTaskMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof FormSchema>) => {
+      await axios.post('http://localhost:8080/task', values, {
+        headers: {
+          ['Content-Type']: 'application/json',
+        },
+      });
+    },
+    onSuccess: () => client.invalidateQueries({ queryKey: ['tasks'] }),
+  });
 
   const submitHandler = useCallback<SubmitHandler<z.infer<typeof FormSchema>>>(
     (values) => {
       console.debug('=> values:', values);
+      createTaskMutation.mutateAsync(values);
     },
-    []
+    [createTaskMutation]
   );
 
   return (
