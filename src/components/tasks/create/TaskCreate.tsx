@@ -1,13 +1,20 @@
 import { FC, useCallback } from 'react';
 import { Button, Card, Form, Input, Radio } from 'antd';
-import { DifficultyValues, EDifficulty, TaskSchema } from './types';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import { EDifficulty, TaskSchema } from '@/types/task';
+import { createTask } from '@/api';
 
 const FormSchema = TaskSchema.omit({ id: true });
+
+const DifficultyValues = [
+  EDifficulty.Trivial,
+  EDifficulty.Easy,
+  EDifficulty.Medium,
+  EDifficulty.Hard,
+];
 
 export const TaskCreatePage: FC = () => {
   const form = useForm({
@@ -20,21 +27,12 @@ export const TaskCreatePage: FC = () => {
   const client = useQueryClient();
 
   const createTaskMutation = useMutation({
-    mutationFn: async (values: z.infer<typeof FormSchema>) => {
-      await axios.post('http://localhost:8080/task', values, {
-        headers: {
-          ['Content-Type']: 'application/json',
-        },
-      });
-    },
+    mutationFn: createTask,
     onSuccess: () => client.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
   const submitHandler = useCallback<SubmitHandler<z.infer<typeof FormSchema>>>(
-    (values) => {
-      console.debug('=> values:', values);
-      createTaskMutation.mutateAsync(values);
-    },
+    (values) => createTaskMutation.mutateAsync(values),
     [createTaskMutation]
   );
 
