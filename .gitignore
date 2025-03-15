@@ -23,3 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 .neoconf.json
+
+# TanStack Router
+src/routeTree.gen.ts
